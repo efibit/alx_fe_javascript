@@ -11,6 +11,17 @@ const newQuoteBtn = document.getElementById("newQuote");
 const categorySelect = document.getElementById("categorySelect");
 const addQuoteBtn = document.getElementById("addQuoteBtn");
 
+// Populate initial categories
+function populateCategories() {
+  const categories = [...new Set(quotes.map(q => q.category))];
+  categories.forEach(cat => {
+    const option = document.createElement("option");
+    option.value = cat;
+    option.textContent = cat;
+    categorySelect.appendChild(option);
+  });
+}
+
 // Display a random quote based on selected category
 function showRandomQuote() {
   const selectedCategory = categorySelect.value;
@@ -24,7 +35,7 @@ function showRandomQuote() {
   }
 
   const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
-  quoteDisplay.textContent = filteredQuotes[randomIndex].text;
+  quoteDisplay.textContent = `"${filteredQuotes[randomIndex].text}"`;
 }
 
 // Add a new quote and update category list
@@ -39,7 +50,7 @@ function addQuote() {
 
   quotes.push({ text: quoteText, category: quoteCategory });
 
-  // Add category to dropdown if it's new
+  // Add new category if it doesn't exist
   const existingCategories = Array.from(categorySelect.options).map(opt => opt.value.toLowerCase());
   if (!existingCategories.includes(quoteCategory.toLowerCase())) {
     const newOption = document.createElement("option");
@@ -51,8 +62,12 @@ function addQuote() {
   // Clear input fields
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
+  alert("Quote added successfully!");
 }
 
 // Event listeners
 newQuoteBtn.addEventListener("click", showRandomQuote);
 addQuoteBtn.addEventListener("click", addQuote);
+
+// Initialize
+populateCategories();
