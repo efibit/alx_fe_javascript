@@ -143,7 +143,24 @@ function notifyUser(message) {
   setTimeout(() => note.remove(), 5000);
 }
 
-// Sync a single quote to server
+// ✅ Fetch quotes from server
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverQuotes = await response.json();
+
+    const formatted = serverQuotes.map(post => ({
+      text: post.title,
+      category: post.body || "General"
+    }));
+
+    resolveConflicts(formatted);
+  } catch (error) {
+    console.error("Server fetch failed:", error);
+  }
+}
+
+// ✅ Sync new quote to server
 async function syncQuoteToServer(quote) {
   try {
     const response = await fetch(SERVER_URL, {
@@ -168,7 +185,41 @@ async function syncQuoteToServer(quote) {
   }
 }
 
-// ✅ Centralized syncQuotes function
+// Conflict resolution: server wins
+function resolveConflicts(serverQuotes) {
+  let updated = false;
+
+  serverQuotes.forEach(sq => {
+    const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
+    if (!exists) {
+      quotes.push(sq);
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    saveQuotes();
+    populateCategories();
+    notifyUser("New quotes synced from server.");
+  }
+}
+
+// Periodic sync every 60 seconds
+setInterval(fetchQuotesFromServer, 60000);
+
+// Event listeners
+addQuoteBtn.addEventListener("click", addQuote);
+exportBtn.addEventListener("click", exportToJsonFile);
+newQuoteBtn.addEventListener("click", showRandomQuote);
+categoryFilter.addEventListener("change", filterQuotes);
+
+// Initialize
+populateCategories();
+const lastQuote = sessionStorage.getItem("lastQuote");
+if (lastQuote) {
+  const quote = JSON.parse(lastQuote);
+  quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
+}
 async function syncQuotes() {
   try {
     const response = await fetch(SERVER_URL);
@@ -189,7 +240,17 @@ async function syncQuotes() {
     });
 
     for (const quote of quotes) {
-      await syncQuoteToServer(quote);
+      await fetch(SERVER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title: quote.text,
+          body: quote.category,
+          userId: 1
+        })
+      });
     }
 
     if (updated) {
@@ -203,21 +264,4 @@ async function syncQuotes() {
     console.error("Sync failed:", error);
     notifyUser("Error syncing quotes with server.");
   }
-}
-
-// Periodic sync every 60 seconds
-setInterval(syncQuotes, 60000);
-
-// Event listeners
-addQuoteBtn.addEventListener("click", addQuote);
-exportBtn.addEventListener("click", exportToJsonFile);
-newQuoteBtn.addEventListener("click", showRandomQuote);
-categoryFilter.addEventListener("change", filterQuotes);
-
-// Initialize
-populateCategories();
-const lastQuote = sessionStorage.getItem("lastQuote");
-if (lastQuote) {
-  const quote = JSON.parse(lastQuote);
-  quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
 }
