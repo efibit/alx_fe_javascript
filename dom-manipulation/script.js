@@ -143,24 +143,7 @@ function notifyUser(message) {
   setTimeout(() => note.remove(), 5000);
 }
 
-// ✅ Fetch quotes from server
-async function fetchQuotesFromServer() {
-  try {
-    const response = await fetch(SERVER_URL);
-    const serverQuotes = await response.json();
-
-    const formatted = serverQuotes.map(post => ({
-      text: post.title,
-      category: post.body || "General"
-    }));
-
-    resolveConflicts(formatted);
-  } catch (error) {
-    console.error("Server fetch failed:", error);
-  }
-}
-
-// ✅ Sync new quote to server
+// Sync a single quote to server
 async function syncQuoteToServer(quote) {
   try {
     const response = await fetch(SERVER_URL, {
@@ -185,27 +168,45 @@ async function syncQuoteToServer(quote) {
   }
 }
 
-// Conflict resolution: server wins
-function resolveConflicts(serverQuotes) {
-  let updated = false;
+// ✅ Centralized syncQuotes function
+async function syncQuotes() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const serverQuotes = await response.json();
 
-  serverQuotes.forEach(sq => {
-    const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
-    if (!exists) {
-      quotes.push(sq);
-      updated = true;
+    const formattedServerQuotes = serverQuotes.map(post => ({
+      text: post.title,
+      category: post.body || "General"
+    }));
+
+    let updated = false;
+    formattedServerQuotes.forEach(sq => {
+      const exists = quotes.some(lq => lq.text === sq.text && lq.category === sq.category);
+      if (!exists) {
+        quotes.push(sq);
+        updated = true;
+      }
+    });
+
+    for (const quote of quotes) {
+      await syncQuoteToServer(quote);
     }
-  });
 
-  if (updated) {
-    saveQuotes();
-    populateCategories();
-    notifyUser("New quotes synced from server.");
+    if (updated) {
+      saveQuotes();
+      populateCategories();
+      notifyUser("Quotes synced with server and updated.");
+    } else {
+      notifyUser("Quotes synced with server. No updates found.");
+    }
+  } catch (error) {
+    console.error("Sync failed:", error);
+    notifyUser("Error syncing quotes with server.");
   }
 }
 
 // Periodic sync every 60 seconds
-setInterval(fetchQuotesFromServer, 60000);
+setInterval(syncQuotes, 60000);
 
 // Event listeners
 addQuoteBtn.addEventListener("click", addQuote);
