@@ -253,13 +253,9 @@ async function syncQuotes() {
       });
     }
 
-    if (updated) {
-      saveQuotes();
-      populateCategories();
-      notifyUser("Quotes synced with server and updated.");
-    } else {
-      notifyUser("Quotes synced with server. No updates found.");
-    }
+    saveQuotes();
+    populateCategories();
+    notifyUser("Quotes synced with server!");
   } catch (error) {
     console.error("Sync failed:", error);
     notifyUser("Error syncing quotes with server.");
