@@ -24,7 +24,7 @@
     .form-group {
       margin-bottom: 10px;
     }
-    input[type="text"] {
+    input[type="text"], select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -44,14 +44,13 @@
   <h1>Dynamic Quote Generator</h1>
 
   <!-- Category Filter -->
-  <label for="categorySelect">Choose Category:</label>
-  <select id="categorySelect">
+  <label for="categoryFilter">Filter by Category:</label>
+  <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
   </select>
-  <button id="newQuote">Show New Quote</button>
 
   <!-- Quote Display -->
-  <div id="quoteDisplay">Click "Show New Quote" to begin.</div>
+  <div id="quoteDisplay">Select a category to view quotes.</div>
 
   <!-- Add New Quote -->
   <h2>Add a New Quote</h2>
@@ -71,7 +70,6 @@
   <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
   <button id="exportQuotes">Export Quotes</button>
 
-  <!-- Script -->
   <script src="script.js"></script>
 </body>
 </html>
