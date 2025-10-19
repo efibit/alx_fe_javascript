@@ -1,13 +1,16 @@
+// Load quotes from localStorage or use default
 let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit is your mind.", category: "Motivation" },
   { text: "Simplicity is the soul of efficiency.", category: "Design" },
   { text: "Code is like humor. When you have to explain it, it’s bad.", category: "Programming" }
 ];
 
+// DOM references
 const quoteDisplay = document.getElementById("quoteDisplay");
 const categoryFilter = document.getElementById("categoryFilter");
 const addQuoteBtn = document.getElementById("addQuoteBtn");
 const exportBtn = document.getElementById("exportQuotes");
+const newQuoteBtn = document.getElementById("newQuote");
 
 // Save quotes to localStorage
 function saveQuotes() {
@@ -56,6 +59,23 @@ function filterQuotes() {
 
   const quoteList = filtered.map(q => `"${q.text}" — ${q.category}`).join("\n\n");
   quoteDisplay.textContent = quoteList;
+}
+
+// Show one random quote from selected category
+function showRandomQuote() {
+  const selectedCategory = categoryFilter.value;
+  const filteredQuotes = selectedCategory === "all"
+    ? quotes
+    : quotes.filter(q => q.category === selectedCategory);
+
+  if (filteredQuotes.length === 0) {
+    quoteDisplay.textContent = "No quotes available for this category.";
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+  const quote = filteredQuotes[randomIndex];
+  quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
 }
 
 // Add new quote
@@ -111,6 +131,7 @@ function importFromJsonFile(event) {
 // Event listeners
 addQuoteBtn.addEventListener("click", addQuote);
 exportBtn.addEventListener("click", exportToJsonFile);
+newQuoteBtn.addEventListener("click", showRandomQuote);
 
 // Initialize
 populateCategories();
